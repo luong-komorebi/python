@@ -55,7 +55,9 @@ class LeaderElection:
     def run(self):
         # Try to create/ acquire a lock
         if self.acquire():
-            logging.info("{} successfully acquired lease".format(self.election_config.lock.identity))
+            logging.info(
+                f"{self.election_config.lock.identity} successfully acquired lease"
+            )
 
             # Start leading and call OnStartedLeading()
             threading.daemon = True
@@ -68,13 +70,11 @@ class LeaderElection:
 
     def acquire(self):
         # Follower
-        logging.info("{} is a follower".format(self.election_config.lock.identity))
+        logging.info(f"{self.election_config.lock.identity} is a follower")
         retry_period = self.election_config.retry_period
 
         while True:
-            succeeded = self.try_acquire_or_renew()
-
-            if succeeded:
+            if succeeded := self.try_acquire_or_renew():
                 return True
 
             time.sleep(retry_period)
@@ -121,22 +121,25 @@ class LeaderElection:
             # To be removed when support for python2 will be removed
             if sys.version_info > (3, 0):
                 if json.loads(old_election_record.body)['code'] != HTTPStatus.NOT_FOUND:
-                    logging.info("Error retrieving resource lock {} as {}".format(self.election_config.lock.name,
-                                                                                  old_election_record.reason))
+                    logging.info(
+                        f"Error retrieving resource lock {self.election_config.lock.name} as {old_election_record.reason}"
+                    )
                     return False
-            else:
-                if json.loads(old_election_record.body)['code'] != httplib.NOT_FOUND:
-                    logging.info("Error retrieving resource lock {} as {}".format(self.election_config.lock.name,
-                                                                                  old_election_record.reason))
-                    return False
+            elif json.loads(old_election_record.body)['code'] != httplib.NOT_FOUND:
+                logging.info(
+                    f"Error retrieving resource lock {self.election_config.lock.name} as {old_election_record.reason}"
+                )
+                return False
 
-            logging.info("{} is trying to create a lock".format(leader_election_record.holder_identity))
+            logging.info(
+                f"{leader_election_record.holder_identity} is trying to create a lock"
+            )
             create_status = self.election_config.lock.create(name=self.election_config.lock.name,
                                                              namespace=self.election_config.lock.namespace,
                                                              election_record=leader_election_record)
 
             if create_status is False:
-                logging.info("{} Failed to create lock".format(leader_election_record.holder_identity))
+                logging.info(f"{leader_election_record.holder_identity} Failed to create lock")
                 return False
 
             self.observed_record = leader_election_record
@@ -156,7 +159,7 @@ class LeaderElection:
 
         # Report transitions
         if self.observed_record and self.observed_record.holder_identity != old_election_record.holder_identity:
-            logging.info("Leader has switched to {}".format(old_election_record.holder_identity))
+            logging.info(f"Leader has switched to {old_election_record.holder_identity}")
 
         if self.observed_record is None or old_election_record.__dict__ != self.observed_record.__dict__:
             self.observed_record = old_election_record
@@ -165,7 +168,9 @@ class LeaderElection:
         # If This candidate is not the leader and lease duration is yet to finish
         if (self.election_config.lock.identity != self.observed_record.holder_identity
                 and self.observed_time_milliseconds + self.election_config.lease_duration * 1000 > int(now_timestamp * 1000)):
-            logging.info("yet to finish lease_duration, lease held by {} and has not expired".format(old_election_record.holder_identity))
+            logging.info(
+                f"yet to finish lease_duration, lease held by {old_election_record.holder_identity} and has not expired"
+            )
             return False
 
         # If this candidate is the Leader
@@ -182,10 +187,14 @@ class LeaderElection:
                                                          leader_election_record)
 
         if update_status is False:
-            logging.info("{} failed to acquire lease".format(leader_election_record.holder_identity))
+            logging.info(
+                f"{leader_election_record.holder_identity} failed to acquire lease"
+            )
             return False
 
         self.observed_record = leader_election_record
         self.observed_time_milliseconds = int(time.time() * 1000)
-        logging.info("leader {} has successfully acquired lease".format(leader_election_record.holder_identity))
+        logging.info(
+            f"leader {leader_election_record.holder_identity} has successfully acquired lease"
+        )
         return True

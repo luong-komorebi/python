@@ -47,13 +47,9 @@ class ExecProvider(object):
             self.args.extend(exec_config['args'])
         self.env = os.environ.copy()
         if exec_config.safe_get('env'):
-            additional_vars = {}
-            for item in exec_config['env']:
-                name = item['name']
-                value = item['value']
-                additional_vars[name] = value
-            self.env.update(additional_vars)
-        
+            additional_vars = {item['name']: item['value'] for item in exec_config['env']}
+            self.env |= additional_vars
+
         self.cwd = cwd or None
 
     def run(self, previous_response=None):
@@ -80,21 +76,19 @@ class ExecProvider(object):
         exit_code = process.wait()
         if exit_code != 0:
             msg = 'exec: process returned %d' % exit_code
-            stderr = stderr.strip()
-            if stderr:
-                msg += '. %s' % stderr
+            if stderr := stderr.strip():
+                msg += f'. {stderr}'
             raise ConfigException(msg)
         try:
             data = json.loads(stdout)
         except ValueError as de:
-            raise ConfigException(
-                'exec: failed to decode process output: %s' % de)
+            raise ConfigException(f'exec: failed to decode process output: {de}')
         for key in ('apiVersion', 'kind', 'status'):
             if key not in data:
                 raise ConfigException(
                     'exec: malformed response. missing key \'%s\'' % key)
         if data['apiVersion'] != self.api_version:
             raise ConfigException(
-                'exec: plugin api version %s does not match %s' %
-                (data['apiVersion'], self.api_version))
+                f"exec: plugin api version {data['apiVersion']} does not match {self.api_version}"
+            )
         return data['status']

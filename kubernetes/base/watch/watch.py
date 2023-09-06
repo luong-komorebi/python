@@ -45,10 +45,14 @@ class SimpleNamespace:
 
 
 def _find_return_type(func):
-    for line in pydoc.getdoc(func).splitlines():
-        if line.startswith(PYDOC_RETURN_LABEL):
-            return line[len(PYDOC_RETURN_LABEL):].strip()
-    return ""
+    return next(
+        (
+            line[len(PYDOC_RETURN_LABEL) :].strip()
+            for line in pydoc.getdoc(func).splitlines()
+            if line.startswith(PYDOC_RETURN_LABEL)
+        ),
+        "",
+    )
 
 
 def iter_resp_lines(resp):
@@ -88,10 +92,7 @@ class Watch(object):
         return return_type
 
     def get_watch_argument_name(self, func):
-        if PYDOC_FOLLOW_PARAM in pydoc.getdoc(func):
-            return 'follow'
-        else:
-            return 'watch'
+        return 'follow' if PYDOC_FOLLOW_PARAM in pydoc.getdoc(func) else 'watch'
 
     def unmarshal_event(self, data, return_type):
         js = json.loads(data)
@@ -168,17 +169,16 @@ class Watch(object):
                     if watch_arg == "watch":
                         event = self.unmarshal_event(line, return_type)
                         if isinstance(event, dict) \
-                                and event['type'] == 'ERROR':
+                                    and event['type'] == 'ERROR':
                             obj = event['raw_object']
                             # Current request expired, let's retry, (if enabled)
                             # but only if we have not already retried.
                             if not disable_retries and not retry_after_410 and \
-                                    obj['code'] == HTTP_STATUS_GONE:
+                                        obj['code'] == HTTP_STATUS_GONE:
                                 retry_after_410 = True
                                 break
                             else:
-                                reason = "%s: %s" % (
-                                    obj['reason'], obj['message'])
+                                reason = f"{obj['reason']}: {obj['message']}"
                                 raise client.rest.ApiException(
                                     status=obj['code'], reason=reason)
                         else:

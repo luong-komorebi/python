@@ -97,7 +97,7 @@ class FileOrData(object):
                  file_base_path="", base64_file_content=True,
                  temp_file_path=None):
         if not data_key_name:
-            data_key_name = file_key_name + "-data"
+            data_key_name = f"{file_key_name}-data"
         self._file = None
         self._data = None
         self._base64_file_content = base64_file_content
@@ -113,27 +113,22 @@ class FileOrData(object):
     def as_file(self):
         """If obj[%data_key_name] exists, return name of a file with base64
         decoded obj[%data_key_name] content otherwise obj[%file_key_name]."""
-        use_data_if_no_file = not self._file and self._data
-        if use_data_if_no_file:
+        if use_data_if_no_file := not self._file and self._data:
             if self._base64_file_content:
-                if isinstance(self._data, str):
-                    content = self._data.encode()
-                else:
-                    content = self._data
+                content = self._data.encode() if isinstance(self._data, str) else self._data
                 self._file = _create_temp_file_with_content(
                     base64.standard_b64decode(content), self._temp_file_path)
             else:
                 self._file = _create_temp_file_with_content(
                     self._data, self._temp_file_path)
         if self._file and not os.path.isfile(self._file):
-            raise ConfigException("File does not exist: %s" % self._file)
+            raise ConfigException(f"File does not exist: {self._file}")
         return self._file
 
     def as_data(self):
         """If obj[%data_key_name] exists, Return obj[%data_key_name] otherwise
         base64 encoded string of obj[%file_key_name] file content."""
-        use_file_if_no_data = not self._data and self._file
-        if use_file_if_no_data:
+        if use_file_if_no_data := not self._data and self._file:
             with open(self._file) as f:
                 if self._base64_file_content:
                     self._data = bytes.decode(
@@ -147,17 +142,11 @@ class CommandTokenSource(object):
     def __init__(self, cmd, args, tokenKey, expiryKey):
         self._cmd = cmd
         self._args = args
-        if not tokenKey:
-            self._tokenKey = '{.access_token}'
-        else:
-            self._tokenKey = tokenKey
-        if not expiryKey:
-            self._expiryKey = '{.token_expiry}'
-        else:
-            self._expiryKey = expiryKey
+        self._tokenKey = '{.access_token}' if not tokenKey else tokenKey
+        self._expiryKey = '{.token_expiry}' if not expiryKey else expiryKey
 
     def token(self):
-        fullCmd = self._cmd + (" ") + " ".join(self._args)
+        fullCmd = f"{self._cmd} " + " ".join(self._args)
         process = subprocess.Popen(
             [self._cmd] + self._args,
             stdout=subprocess.PIPE,
@@ -168,15 +157,13 @@ class CommandTokenSource(object):
         if exit_code != 0:
             msg = 'cmd-path: process returned %d' % exit_code
             msg += "\nCmd: %s" % fullCmd
-            stderr = stderr.strip()
-            if stderr:
+            if stderr := stderr.strip():
                 msg += '\nStderr: %s' % stderr
             raise ConfigException(msg)
         try:
             data = json.loads(stdout)
         except ValueError as de:
-            raise ConfigException(
-                'exec: failed to decode process output: %s' % de)
+            raise ConfigException(f'exec: failed to decode process output: {de}')
         A = namedtuple('A', ['token', 'expiry'])
         return A(
             token=data['credential']['access_token'],
@@ -260,9 +247,9 @@ class KubeConfigLoader(object):
             context_name)
         if (self._current_context['context'].safe_get('user') and
                 self._config.safe_get('users')):
-            user = self._config['users'].get_with_name(
-                self._current_context['context']['user'], safe=True)
-            if user:
+            if user := self._config['users'].get_with_name(
+                self._current_context['context']['user'], safe=True
+            ):
                 self._user = user['user']
             else:
                 self._user = None
@@ -310,9 +297,8 @@ class KubeConfigLoader(object):
         expires_on = provider['config']['expires-on']
         if expires_on.isdigit():
             return int(expires_on) < time.time()
-        else:
-            exp_time = time.strptime(expires_on, '%Y-%m-%d %H:%M:%S.%f')
-            return exp_time < time.gmtime()
+        exp_time = time.strptime(expires_on, '%Y-%m-%d %H:%M:%S.%f')
+        return exp_time < time.gmtime()
 
     def _load_azure_token(self, provider):
         if 'config' not in provider:
@@ -322,7 +308,7 @@ class KubeConfigLoader(object):
         if 'expires-on' in provider['config']:
             if self._azure_is_expired(provider):
                 self._refresh_azure_token(provider['config'])
-        self.token = 'Bearer %s' % provider['config']['access-token']
+        self.token = f"Bearer {provider['config']['access-token']}"
         return self.token
 
     def _refresh_azure_token(self, config):
@@ -330,7 +316,7 @@ class KubeConfigLoader(object):
             raise ImportError('refresh token error, adal library not imported')
 
         tenant = config['tenant-id']
-        authority = 'https://login.microsoftonline.com/{}'.format(tenant)
+        authority = f'https://login.microsoftonline.com/{tenant}'
         context = adal.AuthenticationContext(
             authority, validate_authority=True, api_version='1.0'
         )
@@ -359,7 +345,7 @@ class KubeConfigLoader(object):
             # token is not available or expired, refresh it
             self._refresh_gcp_token()
 
-        self.token = "Bearer %s" % provider['config']['access-token']
+        self.token = f"Bearer {provider['config']['access-token']}"
         if 'expiry' in provider['config']:
             self.expiry = parse_rfc3339(provider['config']['expiry'])
         return self.token
@@ -415,7 +401,7 @@ class KubeConfigLoader(object):
             if self._config_persister:
                 self._config_persister()
 
-        self.token = "Bearer %s" % provider['config']['id-token']
+        self.token = f"Bearer {provider['config']['id-token']}"
 
         return self.token
 
@@ -449,8 +435,7 @@ class KubeConfigLoader(object):
 
         response = client.request(
             method="GET",
-            url="%s/.well-known/openid-configuration"
-            % provider['config']['idp-issuer-url']
+            url=f"{provider['config']['idp-issuer-url']}/.well-known/openid-configuration",
         )
 
         if response.status != 200:
@@ -489,7 +474,7 @@ class KubeConfigLoader(object):
             base_path = self._get_base_path(self._cluster.path)
             status = ExecProvider(self._user['exec'], base_path).run()
             if 'token' in status:
-                self.token = "Bearer %s" % status['token']
+                self.token = f"Bearer {status['token']}"
             elif 'clientCertificateData' in status:
                 # https://kubernetes.io/docs/reference/access-authn-authz/authentication/#input-and-output-formats
                 # Plugin has provided certificates instead of a token.
@@ -521,13 +506,15 @@ class KubeConfigLoader(object):
 
     def _load_user_token(self):
         base_path = self._get_base_path(self._user.path)
-        token = FileOrData(
-            self._user, 'tokenFile', 'token',
+        if token := FileOrData(
+            self._user,
+            'tokenFile',
+            'token',
             file_base_path=base_path,
             base64_file_content=False,
-            temp_file_path=self._temp_file_path).as_data()
-        if token:
-            self.token = "Bearer %s" % token
+            temp_file_path=self._temp_file_path,
+        ).as_data():
+            self.token = f"Bearer {token}"
             return True
 
     def _load_user_pass_token(self):
@@ -621,18 +608,18 @@ class ConfigNode(object):
         v = self.safe_get(key)
         if v is None:
             raise ConfigException(
-                'Invalid kube-config file. Expected key %s in %s'
-                % (key, self.name))
-        if isinstance(v, dict) or isinstance(v, list):
-            return ConfigNode('%s/%s' % (self.name, key), v, self.path)
+                f'Invalid kube-config file. Expected key {key} in {self.name}'
+            )
+        if isinstance(v, (dict, list)):
+            return ConfigNode(f'{self.name}/{key}', v, self.path)
         else:
             return v
 
     def get_with_name(self, name, safe=False):
         if not isinstance(self.value, list):
             raise ConfigException(
-                'Invalid kube-config file. Expected %s to be a list'
-                % self.name)
+                f'Invalid kube-config file. Expected {self.name} to be a list'
+            )
         result = None
         for v in self.value:
             if 'name' not in v:
@@ -652,9 +639,7 @@ class ConfigNode(object):
             if isinstance(result, ConfigNode):
                 return result
             else:
-                return ConfigNode(
-                    '%s[name=%s]' %
-                    (self.name, name), result, self.path)
+                return ConfigNode(f'{self.name}[name={name}]', result, self.path)
         if safe:
             return None
         raise ConfigException(
@@ -733,8 +718,9 @@ class KubeConfigMerger:
                 if exists['name'] == new_item['name']:
                     break
             else:
-                self.config_merged.value[item].append(ConfigNode(
-                    '{}/{}'.format(path, new_item), new_item, path))
+                self.config_merged.value[item].append(
+                    ConfigNode(f'{path}/{new_item}', new_item, path)
+                )
 
     def save_changes(self):
         for path in self.paths:
@@ -761,24 +747,23 @@ def _get_kube_config_loader(
         config_dict=None,
         persist_config=False,
         **kwargs):
-    if config_dict is None:
-        kcfg = KubeConfigMerger(filename)
-        if persist_config and 'config_persister' not in kwargs:
-            kwargs['config_persister'] = kcfg.save_changes
-
-        if kcfg.config is None:
-            raise ConfigException(
-                'Invalid kube-config file. '
-                'No configuration found.')
-        return KubeConfigLoader(
-            config_dict=kcfg.config,
-            config_base_path=None,
-            **kwargs)
-    else:
+    if config_dict is not None:
         return KubeConfigLoader(
             config_dict=config_dict,
             config_base_path=None,
             **kwargs)
+    kcfg = KubeConfigMerger(filename)
+    if persist_config and 'config_persister' not in kwargs:
+        kwargs['config_persister'] = kcfg.save_changes
+
+    if kcfg.config is None:
+        raise ConfigException(
+            'Invalid kube-config file. '
+            'No configuration found.')
+    return KubeConfigLoader(
+        config_dict=kcfg.config,
+        config_base_path=None,
+        **kwargs)
 
 
 def list_kube_config_contexts(config_file=None):

@@ -81,16 +81,19 @@ pygments_style = 'sphinx'
 # html_static_path = ['static']
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = '%sdoc' % project
+htmlhelp_basename = f'{project}doc'
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass
 # [howto/manual]).
 latex_documents = [
-    ('index',
-     '%s.tex' % project,
-     u'%s Documentation' % project,
-     u'Kubernetes', 'manual'),
+    (
+        'index',
+        f'{project}.tex',
+        f'{project} Documentation',
+        u'Kubernetes',
+        'manual',
+    )
 ]
 
 # Example configuration for intersphinx: refer to the Python standard library.

@@ -200,9 +200,11 @@ class LeaderElectionTest(unittest.TestCase):
         self.assertEqual(len(expected), len(history))
 
         for idx in range(len(history)):
-            self.assertEqual(history[idx], expected[idx],
-                              msg="Not equal at index {}, expected {}, got {}".format(idx, expected[idx],
-                                                                                      history[idx]))
+            self.assertEqual(
+                history[idx],
+                expected[idx],
+                msg=f"Not equal at index {idx}, expected {expected[idx]}, got {history[idx]}",
+            )
 
 
 class MockResourceLock:

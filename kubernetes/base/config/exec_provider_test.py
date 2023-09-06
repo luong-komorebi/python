@@ -126,9 +126,9 @@ class ExecProviderTest(unittest.TestCase):
             ep = ExecProvider(self.input_ok, None)
             ep.run()
         self.assertIn(
-            'exec: plugin api version %s does not match' %
-            wrong_api_version,
-            context.exception.args[0])
+            f'exec: plugin api version {wrong_api_version} does not match',
+            context.exception.args[0],
+        )
 
     @mock.patch('subprocess.Popen')
     def test_ok_01(self, mock):

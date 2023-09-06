@@ -27,14 +27,12 @@ def create_deployment_object():
             match_labels={"app": "nginx"}
         ),
         template=template)
-    # Deployment
-    deployment = client.V1Deployment(
+    return client.V1Deployment(
         api_version="apps/v1",
         kind="Deployment",
         metadata=client.V1ObjectMeta(name="deploy-nginx"),
-        spec=spec)
-
-    return deployment
+        spec=spec,
+    )
 
 
 def create_deployment(apps_v1_api, deployment_object):
@@ -62,8 +60,9 @@ def main():
     time.sleep(1)
     before_annotating = apps_v1_api.read_namespaced_deployment(
         'deploy-nginx', 'default')
-    print('Before annotating, annotations: %s' %
-          before_annotating.metadata.annotations)
+    print(
+        f'Before annotating, annotations: {before_annotating.metadata.annotations}'
+    )
 
     annotations = [
         {
@@ -80,8 +79,9 @@ def main():
     time.sleep(1)
     after_annotating = apps_v1_api.read_namespaced_deployment(
         name='deploy-nginx', namespace='default')
-    print('After annotating, annotations: %s' %
-          after_annotating.metadata.annotations)
+    print(
+        f'After annotating, annotations: {after_annotating.metadata.annotations}'
+    )
 
 
 if __name__ == "__main__":

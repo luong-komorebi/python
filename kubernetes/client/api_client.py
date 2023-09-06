@@ -473,8 +473,7 @@ class ApiClient(object):
                         filedata = f.read()
                         mimetype = (mimetypes.guess_type(filename)[0] or
                                     'application/octet-stream')
-                        params.append(
-                            tuple([k, tuple([filename, filedata, mimetype])]))
+                        params.append((k, (filename, filedata, mimetype)))
 
         return params
 
@@ -521,8 +520,7 @@ class ApiClient(object):
             return
 
         for auth in auth_settings:
-            auth_setting = self.configuration.auth_settings().get(auth)
-            if auth_setting:
+            if auth_setting := self.configuration.auth_settings().get(auth):
                 if auth_setting['in'] == 'cookie':
                     headers['Cookie'] = auth_setting['value']
                 elif auth_setting['in'] == 'header':
@@ -547,8 +545,7 @@ class ApiClient(object):
         os.close(fd)
         os.remove(path)
 
-        content_disposition = response.getheader("Content-Disposition")
-        if content_disposition:
+        if content_disposition := response.getheader("Content-Disposition"):
             filename = re.search(r'filename=[\'"]?([^\'"\s]+)[\'"]?',
                                  content_disposition).group(1)
             path = os.path.join(os.path.dirname(path), filename)
@@ -641,7 +638,6 @@ class ApiClient(object):
         instance = klass(**kwargs)
 
         if hasattr(instance, 'get_real_child_model'):
-            klass_name = instance.get_real_child_model(data)
-            if klass_name:
+            if klass_name := instance.get_real_child_model(data):
                 instance = self.__deserialize(data, klass_name)
         return instance

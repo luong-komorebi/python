@@ -66,7 +66,7 @@ class BatchV1Api(object):
         kwargs['_return_http_data_only'] = True
         return self.create_namespaced_cron_job_with_http_info(namespace, body, **kwargs)  # noqa: E501
 
-    def create_namespaced_cron_job_with_http_info(self, namespace, body, **kwargs):  # noqa: E501
+    def create_namespaced_cron_job_with_http_info(self, namespace, body, **kwargs):    # noqa: E501
         """create_namespaced_cron_job  # noqa: E501
 
         create a CronJob  # noqa: E501
@@ -104,22 +104,16 @@ class BatchV1Api(object):
             'pretty',
             'dry_run',
             'field_manager',
-            'field_validation'
+            'field_validation',
+            'async_req',
+            '_return_http_data_only',
+            '_preload_content',
+            '_request_timeout',
         ]
-        all_params.extend(
-            [
-                'async_req',
-                '_return_http_data_only',
-                '_preload_content',
-                '_request_timeout'
-            ]
-        )
-
         for key, val in six.iteritems(local_var_params['kwargs']):
             if key not in all_params:
                 raise ApiTypeError(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method create_namespaced_cron_job" % key
+                    f"Got an unexpected keyword argument '{key}' to method create_namespaced_cron_job"
                 )
             local_var_params[key] = val
         del local_var_params['kwargs']
@@ -148,18 +142,19 @@ class BatchV1Api(object):
         if 'field_validation' in local_var_params and local_var_params['field_validation'] is not None:  # noqa: E501
             query_params.append(('fieldValidation', local_var_params['field_validation']))  # noqa: E501
 
-        header_params = {}
-
         form_params = []
         local_var_files = {}
 
-        body_params = None
-        if 'body' in local_var_params:
-            body_params = local_var_params['body']
-        # HTTP header `Accept`
-        header_params['Accept'] = self.api_client.select_header_accept(
-            ['application/json', 'application/yaml', 'application/vnd.kubernetes.protobuf'])  # noqa: E501
-
+        body_params = local_var_params.get('body', None)
+        header_params = {
+            'Accept': self.api_client.select_header_accept(
+                [
+                    'application/json',
+                    'application/yaml',
+                    'application/vnd.kubernetes.protobuf',
+                ]
+            )
+        }
         # Authentication setting
         auth_settings = ['BearerToken']  # noqa: E501
 
@@ -209,7 +204,7 @@ class BatchV1Api(object):
         kwargs['_return_http_data_only'] = True
         return self.create_namespaced_job_with_http_info(namespace, body, **kwargs)  # noqa: E501
 
-    def create_namespaced_job_with_http_info(self, namespace, body, **kwargs):  # noqa: E501
+    def create_namespaced_job_with_http_info(self, namespace, body, **kwargs):    # noqa: E501
         """create_namespaced_job  # noqa: E501
 
         create a Job  # noqa: E501
@@ -247,22 +242,16 @@ class BatchV1Api(object):
             'pretty',
             'dry_run',
             'field_manager',
-            'field_validation'
+            'field_validation',
+            'async_req',
+            '_return_http_data_only',
+            '_preload_content',
+            '_request_timeout',
         ]
-        all_params.extend(
-            [
-                'async_req',
-                '_return_http_data_only',
-                '_preload_content',
-                '_request_timeout'
-            ]
-        )
-
         for key, val in six.iteritems(local_var_params['kwargs']):
             if key not in all_params:
                 raise ApiTypeError(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method create_namespaced_job" % key
+                    f"Got an unexpected keyword argument '{key}' to method create_namespaced_job"
                 )
             local_var_params[key] = val
         del local_var_params['kwargs']
@@ -291,18 +280,19 @@ class BatchV1Api(object):
         if 'field_validation' in local_var_params and local_var_params['field_validation'] is not None:  # noqa: E501
             query_params.append(('fieldValidation', local_var_params['field_validation']))  # noqa: E501
 
-        header_params = {}
-
         form_params = []
         local_var_files = {}
 
-        body_params = None
-        if 'body' in local_var_params:
-            body_params = local_var_params['body']
-        # HTTP header `Accept`
-        header_params['Accept'] = self.api_client.select_header_accept(
-            ['application/json', 'application/yaml', 'application/vnd.kubernetes.protobuf'])  # noqa: E501
-
+        body_params = local_var_params.get('body', None)
+        header_params = {
+            'Accept': self.api_client.select_header_accept(
+                [
+                    'application/json',
+                    'application/yaml',
+                    'application/vnd.kubernetes.protobuf',
+                ]
+            )
+        }
         # Authentication setting
         auth_settings = ['BearerToken']  # noqa: E501
 
@@ -360,7 +350,7 @@ class BatchV1Api(object):
         kwargs['_return_http_data_only'] = True
         return self.delete_collection_namespaced_cron_job_with_http_info(namespace, **kwargs)  # noqa: E501
 
-    def delete_collection_namespaced_cron_job_with_http_info(self, namespace, **kwargs):  # noqa: E501
+    def delete_collection_namespaced_cron_job_with_http_info(self, namespace, **kwargs):    # noqa: E501
         """delete_collection_namespaced_cron_job  # noqa: E501
 
         delete collection of CronJob  # noqa: E501
@@ -414,22 +404,16 @@ class BatchV1Api(object):
             'resource_version',
             'resource_version_match',
             'timeout_seconds',
-            'body'
+            'body',
+            'async_req',
+            '_return_http_data_only',
+            '_preload_content',
+            '_request_timeout',
         ]
-        all_params.extend(
-            [
-                'async_req',
-                '_return_http_data_only',
-                '_preload_content',
-                '_request_timeout'
-            ]
-        )
-
         for key, val in six.iteritems(local_var_params['kwargs']):
             if key not in all_params:
                 raise ApiTypeError(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method delete_collection_namespaced_cron_job" % key
+                    f"Got an unexpected keyword argument '{key}' to method delete_collection_namespaced_cron_job"
                 )
             local_var_params[key] = val
         del local_var_params['kwargs']
@@ -470,18 +454,19 @@ class BatchV1Api(object):
         if 'timeout_seconds' in local_var_params and local_var_params['timeout_seconds'] is not None:  # noqa: E501
             query_params.append(('timeoutSeconds', local_var_params['timeout_seconds']))  # noqa: E501
 
-        header_params = {}
-
         form_params = []
         local_var_files = {}
 
-        body_params = None
-        if 'body' in local_var_params:
-            body_params = local_var_params['body']
-        # HTTP header `Accept`
-        header_params['Accept'] = self.api_client.select_header_accept(
-            ['application/json', 'application/yaml', 'application/vnd.kubernetes.protobuf'])  # noqa: E501
-
+        body_params = local_var_params.get('body', None)
+        header_params = {
+            'Accept': self.api_client.select_header_accept(
+                [
+                    'application/json',
+                    'application/yaml',
+                    'application/vnd.kubernetes.protobuf',
+                ]
+            )
+        }
         # Authentication setting
         auth_settings = ['BearerToken']  # noqa: E501
 
@@ -539,7 +524,7 @@ class BatchV1Api(object):
         kwargs['_return_http_data_only'] = True
         return self.delete_collection_namespaced_job_with_http_info(namespace, **kwargs)  # noqa: E501
 
-    def delete_collection_namespaced_job_with_http_info(self, namespace, **kwargs):  # noqa: E501
+    def delete_collection_namespaced_job_with_http_info(self, namespace, **kwargs):    # noqa: E501
         """delete_collection_namespaced_job  # noqa: E501
 
         delete collection of Job  # noqa: E501
@@ -593,22 +578,16 @@ class BatchV1Api(object):
             'resource_version',
             'resource_version_match',
             'timeout_seconds',
-            'body'
+            'body',
+            'async_req',
+            '_return_http_data_only',
+            '_preload_content',
+            '_request_timeout',
         ]
-        all_params.extend(
-            [
-                'async_req',
-                '_return_http_data_only',
-                '_preload_content',
-                '_request_timeout'
-            ]
-        )
-
         for key, val in six.iteritems(local_var_params['kwargs']):
             if key not in all_params:
                 raise ApiTypeError(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method delete_collection_namespaced_job" % key
+                    f"Got an unexpected keyword argument '{key}' to method delete_collection_namespaced_job"
                 )
             local_var_params[key] = val
         del local_var_params['kwargs']
@@ -649,18 +628,19 @@ class BatchV1Api(object):
         if 'timeout_seconds' in local_var_params and local_var_params['timeout_seconds'] is not None:  # noqa: E501
             query_params.append(('timeoutSeconds', local_var_params['timeout_seconds']))  # noqa: E501
 
-        header_params = {}
-
         form_params = []
         local_var_files = {}
 
-        body_params = None
-        if 'body' in local_var_params:
-            body_params = local_var_params['body']
-        # HTTP header `Accept`
-        header_params['Accept'] = self.api_client.select_header_accept(
-            ['application/json', 'application/yaml', 'application/vnd.kubernetes.protobuf'])  # noqa: E501
-
+        body_params = local_var_params.get('body', None)
+        header_params = {
+            'Accept': self.api_client.select_header_accept(
+                [
+                    'application/json',
+                    'application/yaml',
+                    'application/vnd.kubernetes.protobuf',
+                ]
+            )
+        }
         # Authentication setting
         auth_settings = ['BearerToken']  # noqa: E501
 
@@ -712,7 +692,7 @@ class BatchV1Api(object):
         kwargs['_return_http_data_only'] = True
         return self.delete_namespaced_cron_job_with_http_info(name, namespace, **kwargs)  # noqa: E501
 
-    def delete_namespaced_cron_job_with_http_info(self, name, namespace, **kwargs):  # noqa: E501
+    def delete_namespaced_cron_job_with_http_info(self, name, namespace, **kwargs):    # noqa: E501
         """delete_namespaced_cron_job  # noqa: E501
 
         delete a CronJob  # noqa: E501
@@ -754,22 +734,16 @@ class BatchV1Api(object):
             'grace_period_seconds',
             'orphan_dependents',
             'propagation_policy',
-            'body'
+            'body',
+            'async_req',
+            '_return_http_data_only',
+            '_preload_content',
+            '_request_timeout',
         ]
-        all_params.extend(
-            [
-                'async_req',
-                '_return_http_data_only',
-                '_preload_content',
-                '_request_timeout'
-            ]
-        )
-
         for key, val in six.iteritems(local_var_params['kwargs']):
             if key not in all_params:
                 raise ApiTypeError(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method delete_namespaced_cron_job" % key
+                    f"Got an unexpected keyword argument '{key}' to method delete_namespaced_cron_job"
                 )
             local_var_params[key] = val
         del local_var_params['kwargs']
@@ -802,18 +776,19 @@ class BatchV1Api(object):
         if 'propagation_policy' in local_var_params and local_var_params['propagation_policy'] is not None:  # noqa: E501
             query_params.append(('propagationPolicy', local_var_params['propagation_policy']))  # noqa: E501
 
-        header_params = {}
-
         form_params = []
         local_var_files = {}
 
-        body_params = None
-        if 'body' in local_var_params:
-            body_params = local_var_params['body']
-        # HTTP header `Accept`
-        header_params['Accept'] = self.api_client.select_header_accept(
-            ['application/json', 'application/yaml', 'application/vnd.kubernetes.protobuf'])  # noqa: E501
-
+        body_params = local_var_params.get('body', None)
+        header_params = {
+            'Accept': self.api_client.select_header_accept(
+                [
+                    'application/json',
+                    'application/yaml',
+                    'application/vnd.kubernetes.protobuf',
+                ]
+            )
+        }
         # Authentication setting
         auth_settings = ['BearerToken']  # noqa: E501
 
@@ -865,7 +840,7 @@ class BatchV1Api(object):
         kwargs['_return_http_data_only'] = True
         return self.delete_namespaced_job_with_http_info(name, namespace, **kwargs)  # noqa: E501
 
-    def delete_namespaced_job_with_http_info(self, name, namespace, **kwargs):  # noqa: E501
+    def delete_namespaced_job_with_http_info(self, name, namespace, **kwargs):    # noqa: E501
         """delete_namespaced_job  # noqa: E501
 
         delete a Job  # noqa: E501
@@ -907,22 +882,16 @@ class BatchV1Api(object):
             'grace_period_seconds',
             'orphan_dependents',
             'propagation_policy',
-            'body'
+            'body',
+            'async_req',
+            '_return_http_data_only',
+            '_preload_content',
+            '_request_timeout',
         ]
-        all_params.extend(
-            [
-                'async_req',
-                '_return_http_data_only',
-                '_preload_content',
-                '_request_timeout'
-            ]
-        )
-
         for key, val in six.iteritems(local_var_params['kwargs']):
             if key not in all_params:
                 raise ApiTypeError(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method delete_namespaced_job" % key
+                    f"Got an unexpected keyword argument '{key}' to method delete_namespaced_job"
                 )
             local_var_params[key] = val
         del local_var_params['kwargs']
@@ -955,18 +924,19 @@ class BatchV1Api(object):
         if 'propagation_policy' in local_var_params and local_var_params['propagation_policy'] is not None:  # noqa: E501
             query_params.append(('propagationPolicy', local_var_params['propagation_policy']))  # noqa: E501
 
-        header_params = {}
-
         form_params = []
         local_var_files = {}
 
-        body_params = None
-        if 'body' in local_var_params:
-            body_params = local_var_params['body']
-        # HTTP header `Accept`
-        header_params['Accept'] = self.api_client.select_header_accept(
-            ['application/json', 'application/yaml', 'application/vnd.kubernetes.protobuf'])  # noqa: E501
-
+        body_params = local_var_params.get('body', None)
+        header_params = {
+            'Accept': self.api_client.select_header_accept(
+                [
+                    'application/json',
+                    'application/yaml',
+                    'application/vnd.kubernetes.protobuf',
+                ]
+            )
+        }
         # Authentication setting
         auth_settings = ['BearerToken']  # noqa: E501
 
@@ -1010,7 +980,7 @@ class BatchV1Api(object):
         kwargs['_return_http_data_only'] = True
         return self.get_api_resources_with_http_info(**kwargs)  # noqa: E501
 
-    def get_api_resources_with_http_info(self, **kwargs):  # noqa: E501
+    def get_api_resources_with_http_info(self, **kwargs):    # noqa: E501
         """get_api_resources  # noqa: E501
 
         get available resources  # noqa: E501
@@ -1037,44 +1007,40 @@ class BatchV1Api(object):
         local_var_params = locals()
 
         all_params = [
+            'async_req',
+            '_return_http_data_only',
+            '_preload_content',
+            '_request_timeout',
         ]
-        all_params.extend(
-            [
-                'async_req',
-                '_return_http_data_only',
-                '_preload_content',
-                '_request_timeout'
-            ]
-        )
-
         for key, val in six.iteritems(local_var_params['kwargs']):
             if key not in all_params:
                 raise ApiTypeError(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method get_api_resources" % key
+                    f"Got an unexpected keyword argument '{key}' to method get_api_resources"
                 )
             local_var_params[key] = val
         del local_var_params['kwargs']
-
-        collection_formats = {}
 
         path_params = {}
 
         query_params = []
 
-        header_params = {}
-
         form_params = []
         local_var_files = {}
 
         body_params = None
-        # HTTP header `Accept`
-        header_params['Accept'] = self.api_client.select_header_accept(
-            ['application/json', 'application/yaml', 'application/vnd.kubernetes.protobuf'])  # noqa: E501
-
+        header_params = {
+            'Accept': self.api_client.select_header_accept(
+                [
+                    'application/json',
+                    'application/yaml',
+                    'application/vnd.kubernetes.protobuf',
+                ]
+            )
+        }
         # Authentication setting
         auth_settings = ['BearerToken']  # noqa: E501
 
+        collection_formats = {}
         return self.api_client.call_api(
             '/apis/batch/v1/', 'GET',
             path_params,
@@ -1125,7 +1091,7 @@ class BatchV1Api(object):
         kwargs['_return_http_data_only'] = True
         return self.list_cron_job_for_all_namespaces_with_http_info(**kwargs)  # noqa: E501
 
-    def list_cron_job_for_all_namespaces_with_http_info(self, **kwargs):  # noqa: E501
+    def list_cron_job_for_all_namespaces_with_http_info(self, **kwargs):    # noqa: E501
         """list_cron_job_for_all_namespaces  # noqa: E501
 
         list or watch objects of kind CronJob  # noqa: E501
@@ -1171,27 +1137,19 @@ class BatchV1Api(object):
             'resource_version',
             'resource_version_match',
             'timeout_seconds',
-            'watch'
+            'watch',
+            'async_req',
+            '_return_http_data_only',
+            '_preload_content',
+            '_request_timeout',
         ]
-        all_params.extend(
-            [
-                'async_req',
-                '_return_http_data_only',
-                '_preload_content',
-                '_request_timeout'
-            ]
-        )
-
         for key, val in six.iteritems(local_var_params['kwargs']):
             if key not in all_params:
                 raise ApiTypeError(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method list_cron_job_for_all_namespaces" % key
+                    f"Got an unexpected keyword argument '{key}' to method list_cron_job_for_all_namespaces"
                 )
             local_var_params[key] = val
         del local_var_params['kwargs']
-
-        collection_formats = {}
 
         path_params = {}
 
@@ -1217,19 +1175,25 @@ class BatchV1Api(object):
         if 'watch' in local_var_params and local_var_params['watch'] is not None:  # noqa: E501
             query_params.append(('watch', local_var_params['watch']))  # noqa: E501
 
-        header_params = {}
-
         form_params = []
         local_var_files = {}
 
         body_params = None
-        # HTTP header `Accept`
-        header_params['Accept'] = self.api_client.select_header_accept(
-            ['application/json', 'application/yaml', 'application/vnd.kubernetes.protobuf', 'application/json;stream=watch', 'application/vnd.kubernetes.protobuf;stream=watch'])  # noqa: E501
-
+        header_params = {
+            'Accept': self.api_client.select_header_accept(
+                [
+                    'application/json',
+                    'application/yaml',
+                    'application/vnd.kubernetes.protobuf',
+                    'application/json;stream=watch',
+                    'application/vnd.kubernetes.protobuf;stream=watch',
+                ]
+            )
+        }
         # Authentication setting
         auth_settings = ['BearerToken']  # noqa: E501
 
+        collection_formats = {}
         return self.api_client.call_api(
             '/apis/batch/v1/cronjobs', 'GET',
             path_params,

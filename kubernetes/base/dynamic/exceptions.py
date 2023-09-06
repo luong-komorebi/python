@@ -52,28 +52,26 @@ class DynamicApiError(ApiException):
         self.original_traceback = tb
 
     def __str__(self):
-        error_message = [str(self.status), "Reason: {}".format(self.reason)]
+        error_message = [str(self.status), f"Reason: {self.reason}"]
         if self.headers:
-            error_message.append("HTTP response headers: {}".format(self.headers))
+            error_message.append(f"HTTP response headers: {self.headers}")
 
         if self.body:
-            error_message.append("HTTP response body: {}".format(self.body))
+            error_message.append(f"HTTP response body: {self.body}")
 
         if self.original_traceback:
-            error_message.append("Original traceback: \n{}".format(self.original_traceback))
+            error_message.append(f"Original traceback: \n{self.original_traceback}")
 
         return '\n'.join(error_message)
 
     def summary(self):
-        if self.body:
-            if self.headers and self.headers.get('Content-Type') == 'application/json':
-                message = json.loads(self.body).get('message')
-                if message:
-                    return message
+        if not self.body:
+            return f"{self.status} Reason: {self.reason}"
+        if self.headers and self.headers.get('Content-Type') == 'application/json':
+            if message := json.loads(self.body).get('message'):
+                return message
 
-            return self.body
-        else:
-            return "{} Reason: {}".format(self.status, self.reason)
+        return self.body
 
 class ResourceNotFoundError(Exception):
     """ Resource was not found in available APIs """

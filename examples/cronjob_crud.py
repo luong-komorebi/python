@@ -64,20 +64,14 @@ def get_cronjob_list(namespace='default'):
 
 def judge_crontab_exists(namespace, name):
     cron_job_list = get_cronjob_list(namespace)
-    for cron_job in cron_job_list:
-        if name == cron_job['metadata']['name']:
-            return True
-    return False
+    return any(name == cron_job['metadata']['name'] for cron_job in cron_job_list)
 
 
 def get_cronjob_body(namespace, name, command):
-    body = {
+    return {
         "apiVersion": "batch/v1",
         "kind": "CronJob",
-        "metadata": {
-            "name": name,
-            "namespace": namespace
-        },
+        "metadata": {"name": name, "namespace": namespace},
         "spec": {
             "schedule": "*/1 * * * *",
             "concurrencyPolicy": "Allow",
@@ -90,19 +84,18 @@ def get_cronjob_body(namespace, name, command):
                                 {
                                     "name": name,
                                     "image": "busybox:1.35",
-                                    "command": command
+                                    "command": command,
                                 }
                             ],
-                            "restartPolicy": "Never"
+                            "restartPolicy": "Never",
                         }
                     }
                 }
             },
             "successfulJobsHistoryLimit": 3,
-            "failedJobsHistoryLimit": 1
-        }
+            "failedJobsHistoryLimit": 1,
+        },
     }
-    return body
 
 
 if __name__ == '__main__':
