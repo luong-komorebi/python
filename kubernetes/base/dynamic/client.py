@@ -61,9 +61,7 @@ def meta_request(func):
                     return serializer(self, json.loads(resp.data))
                 return serializer(self, json.loads(resp.data.decode('utf8')))
             except ValueError:
-                if six.PY2:
-                    return resp.data
-                return resp.data.decode('utf8')
+                return resp.data if six.PY2 else resp.data.decode('utf8')
         return resp
 
     return inner
@@ -92,10 +90,12 @@ class DynamicClient(object):
         return self.__discoverer.version
 
     def ensure_namespace(self, resource, namespace, body):
-        namespace = namespace or body.get('metadata', {}).get('namespace')
-        if not namespace:
-            raise ValueError("Namespace is required for {}.{}".format(resource.group_version, resource.kind))
-        return namespace
+        if namespace := namespace or body.get('metadata', {}).get('namespace'):
+            return namespace
+        else:
+            raise ValueError(
+                f"Namespace is required for {resource.group_version}.{resource.kind}"
+            )
 
     def serialize_body(self, body):
         """Serialize body to raw dict so apiserver can handle it
@@ -130,7 +130,9 @@ class DynamicClient(object):
         body = self.serialize_body(body)
         name = name or body.get('metadata', {}).get('name')
         if not name:
-            raise ValueError("name is required to replace {}.{}".format(resource.group_version, resource.kind))
+            raise ValueError(
+                f"name is required to replace {resource.group_version}.{resource.kind}"
+            )
         if resource.namespaced:
             namespace = self.ensure_namespace(resource, namespace, body)
         path = resource.path(name=name, namespace=namespace)
@@ -140,7 +142,9 @@ class DynamicClient(object):
         body = self.serialize_body(body)
         name = name or body.get('metadata', {}).get('name')
         if not name:
-            raise ValueError("name is required to patch {}.{}".format(resource.group_version, resource.kind))
+            raise ValueError(
+                f"name is required to patch {resource.group_version}.{resource.kind}"
+            )
         if resource.namespaced:
             namespace = self.ensure_namespace(resource, namespace, body)
 
@@ -153,12 +157,14 @@ class DynamicClient(object):
         body = self.serialize_body(body)
         name = name or body.get('metadata', {}).get('name')
         if not name:
-            raise ValueError("name is required to patch {}.{}".format(resource.group_version, resource.kind))
+            raise ValueError(
+                f"name is required to patch {resource.group_version}.{resource.kind}"
+            )
         if resource.namespaced:
             namespace = self.ensure_namespace(resource, namespace, body)
 
         # force content type to 'application/apply-patch+yaml'
-        kwargs.update({'content_type': 'application/apply-patch+yaml'})
+        kwargs['content_type'] = 'application/apply-patch+yaml'
         path = resource.path(name=name, namespace=namespace)
 
         return self.request('patch', path, body=body, force_conflicts=force_conflicts, **kwargs)
@@ -211,7 +217,7 @@ class DynamicClient(object):
     @meta_request
     def request(self, method, path, body=None, **params):
         if not path.startswith('/'):
-            path = '/' + path
+            path = f'/{path}'
 
         path_params = params.get('path_params', {})
         query_params = params.get('query_params', [])
@@ -251,8 +257,10 @@ class DynamicClient(object):
         local_var_files = {}
 
         # Checking Accept header.
-        new_header_params = dict((key.lower(), value) for key, value in header_params.items())
-        if not 'accept' in new_header_params:
+        new_header_params = {
+            key.lower(): value for key, value in header_params.items()
+        }
+        if 'accept' not in new_header_params:
             header_params['Accept'] = self.client.select_header_accept([
                 'application/json',
                 'application/yaml',
@@ -282,10 +290,7 @@ class DynamicClient(object):
             _return_http_data_only=params.get('_return_http_data_only', True),
             _request_timeout=params.get('_request_timeout')
         )
-        if params.get('async_req'):
-            return api_response.get()
-        else:
-            return api_response
+        return api_response.get() if params.get('async_req') else api_response
 
     def validate(self, definition, version=None, strict=False):
         """validate checks a kubernetes resource definition
@@ -301,8 +306,8 @@ class DynamicClient(object):
         if not HAS_KUBERNETES_VALIDATE:
             raise KubernetesValidateMissing()
 
-        errors = list()
-        warnings = list()
+        errors = []
+        warnings = []
         try:
             if version is None:
                 try:
@@ -311,10 +316,15 @@ class DynamicClient(object):
                     version = kubernetes_validate.latest_version()
             kubernetes_validate.validate(definition, version, strict)
         except kubernetes_validate.utils.ValidationError as e:
-            errors.append("resource definition validation error at %s: %s" % ('.'.join([str(item) for item in e.path]), e.message))  # noqa: B306
+            errors.append(
+                f"resource definition validation error at {'.'.join([str(item) for item in e.path])}: {e.message}"
+            )
         except VersionNotSupportedError:
-            errors.append("Kubernetes version %s is not supported by kubernetes-validate" % version)
+            errors.append(
+                f"Kubernetes version {version} is not supported by kubernetes-validate"
+            )
         except kubernetes_validate.utils.SchemaNotFoundError as e:
-            warnings.append("Could not find schema for object kind %s with API version %s in Kubernetes version %s (possibly Custom Resource?)" %
-                            (e.kind, e.api_version, e.version))
+            warnings.append(
+                f"Could not find schema for object kind {e.kind} with API version {e.api_version} in Kubernetes version {e.version} (possibly Custom Resource?)"
+            )
         return warnings, errors

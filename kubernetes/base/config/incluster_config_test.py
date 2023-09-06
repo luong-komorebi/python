@@ -81,37 +81,43 @@ class InClusterConfigTest(unittest.TestCase):
         cert_filename = self._create_file_with_temp_content(_TEST_CERT)
         loader = self.get_test_loader(cert_filename=cert_filename)
         loader._load_config()
-        self.assertEqual("https://" + _TEST_HOST_PORT, loader.host)
+        self.assertEqual(f"https://{_TEST_HOST_PORT}", loader.host)
         self.assertEqual(cert_filename, loader.ssl_ca_cert)
-        self.assertEqual('bearer ' + _TEST_TOKEN, loader.token)
+        self.assertEqual(f'bearer {_TEST_TOKEN}', loader.token)
 
     def test_refresh_token(self):
         loader = self.get_test_loader()
         config = Configuration()
         loader.load_and_set(config)
 
-        self.assertEqual('bearer ' + _TEST_TOKEN,
-                         config.get_api_key_with_prefix('authorization'))
-        self.assertEqual('bearer ' + _TEST_TOKEN, loader.token)
+        self.assertEqual(
+            f'bearer {_TEST_TOKEN}',
+            config.get_api_key_with_prefix('authorization'),
+        )
+        self.assertEqual(f'bearer {_TEST_TOKEN}', loader.token)
         self.assertIsNotNone(loader.token_expires_at)
 
         old_token = loader.token
         old_token_expires_at = loader.token_expires_at
         loader._token_filename = self._create_file_with_temp_content(
             _TEST_NEW_TOKEN)
-        self.assertEqual('bearer ' + _TEST_TOKEN,
-                         config.get_api_key_with_prefix('authorization'))
+        self.assertEqual(
+            f'bearer {_TEST_TOKEN}',
+            config.get_api_key_with_prefix('authorization'),
+        )
 
         loader.token_expires_at = datetime.datetime.now()
-        self.assertEqual('bearer ' + _TEST_NEW_TOKEN,
-                         config.get_api_key_with_prefix('authorization'))
-        self.assertEqual('bearer ' + _TEST_NEW_TOKEN, loader.token)
+        self.assertEqual(
+            f'bearer {_TEST_NEW_TOKEN}',
+            config.get_api_key_with_prefix('authorization'),
+        )
+        self.assertEqual(f'bearer {_TEST_NEW_TOKEN}', loader.token)
         self.assertGreater(loader.token_expires_at, old_token_expires_at)
 
     def _should_fail_load(self, config_loader, reason):
         try:
             config_loader.load_and_set()
-            self.fail("Should fail because %s" % reason)
+            self.fail(f"Should fail because {reason}")
         except ConfigException:
             # expected
             pass

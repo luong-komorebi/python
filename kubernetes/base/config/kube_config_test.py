@@ -104,8 +104,8 @@ TEST_CLIENT_CERT = "client-cert"
 TEST_CLIENT_CERT_BASE64 = _base64(TEST_CLIENT_CERT)
 
 
-TEST_OIDC_TOKEN = "test-oidc-token"
 TEST_OIDC_INFO = "{\"name\": \"test\"}"
+TEST_OIDC_TOKEN = "test-oidc-token"
 TEST_OIDC_BASE = ".".join([
     _urlsafe_unpadded_b64encode(TEST_OIDC_TOKEN),
     _urlsafe_unpadded_b64encode(TEST_OIDC_INFO)
@@ -114,10 +114,9 @@ TEST_OIDC_LOGIN = ".".join([
     TEST_OIDC_BASE,
     _urlsafe_unpadded_b64encode(TEST_CLIENT_CERT_BASE64)
 ])
-TEST_OIDC_TOKEN = "Bearer %s" % TEST_OIDC_LOGIN
+TEST_OIDC_TOKEN = f"Bearer {TEST_OIDC_LOGIN}"
 TEST_OIDC_EXP = "{\"name\": \"test\",\"exp\": 536457600}"
-TEST_OIDC_EXP_BASE = _urlsafe_unpadded_b64encode(
-    TEST_OIDC_TOKEN) + "." + _urlsafe_unpadded_b64encode(TEST_OIDC_EXP)
+TEST_OIDC_EXP_BASE = f"{_urlsafe_unpadded_b64encode(TEST_OIDC_TOKEN)}.{_urlsafe_unpadded_b64encode(TEST_OIDC_EXP)}"
 TEST_OIDC_EXPIRED_LOGIN = ".".join([
     TEST_OIDC_EXP_BASE,
     _urlsafe_unpadded_b64encode(TEST_CLIENT_CERT)
@@ -137,7 +136,7 @@ TEST_OIDC_CA = _base64(TEST_CERTIFICATE_AUTH)
 
 TEST_AZURE_LOGIN = TEST_OIDC_LOGIN
 TEST_AZURE_TOKEN = "test-azure-token"
-TEST_AZURE_TOKEN_FULL = "Bearer " + TEST_AZURE_TOKEN
+TEST_AZURE_TOKEN_FULL = f"Bearer {TEST_AZURE_TOKEN}"
 
 
 class BaseTestCase(unittest.TestCase):
@@ -366,23 +365,26 @@ class FakeConfig:
                 continue
             if k not in other.__dict__:
                 return
-            if k in self.FILE_KEYS:
-                if v and other.__dict__[k]:
-                    try:
-                        with open(v) as f1, open(other.__dict__[k]) as f2:
-                            if f1.read() != f2.read():
-                                return
-                    except IOError:
-                        # fall back to only compare filenames in case we are
-                        # testing the passing of filenames to the config
-                        if other.__dict__[k] != v:
+            if (
+                k in self.FILE_KEYS
+                and (not v or not other.__dict__[k])
+                and other.__dict__[k] != v
+                or k not in self.FILE_KEYS
+                and other.__dict__[k] != v
+            ):
+                return
+            elif (
+                k not in self.FILE_KEYS or v and other.__dict__[k]
+            ) and k in self.FILE_KEYS:
+                try:
+                    with open(v) as f1, open(other.__dict__[k]) as f2:
+                        if f1.read() != f2.read():
                             return
-                else:
+                except IOError:
+                    # fall back to only compare filenames in case we are
+                    # testing the passing of filenames to the config
                     if other.__dict__[k] != v:
                         return
-            else:
-                if other.__dict__[k] != v:
-                    return
         return True
 
     def __repr__(self):
@@ -392,9 +394,9 @@ class FakeConfig:
             if k in self.FILE_KEYS:
                 try:
                     with open(v) as f:
-                        val = "FILE: %s" % str.decode(f.read())
+                        val = f"FILE: {str.decode(f.read())}"
                 except IOError as e:
-                    val = "ERROR: %s" % str(e)
+                    val = f"ERROR: {str(e)}"
             rep += "\t%s: %s\n" % (k, val)
         return "Config(%s\n)" % rep
 
@@ -1362,7 +1364,7 @@ class TestKubeConfigLoader(BaseTestCase):
                                    context="ssl",
                                    client_configuration=actual,
                                    temp_file_path=tmp_path)
-        self.assertFalse(True if not os.listdir(tmp_path) else False)
+        self.assertFalse(not os.listdir(tmp_path))
         self.assertEqual(expected, actual)
         _cleanup_temp_files
 
@@ -1613,10 +1615,12 @@ class TestKubernetesClientConfiguration(BaseTestCase):
         def refresh_api_key_hook(client_config):
             self.assertEqual(client_config, config)
             client_config.api_key[identifier] = expected_token
+
         config.refresh_api_key_hook = refresh_api_key_hook
 
-        self.assertEqual('Bearer ' + expected_token,
-                         config.get_api_key_with_prefix(identifier))
+        self.assertEqual(
+            f'Bearer {expected_token}', config.get_api_key_with_prefix(identifier)
+        )
 
 
 class TestKubeConfigMerger(BaseTestCase):
@@ -1785,15 +1789,17 @@ class TestKubeConfigMerger(BaseTestCase):
     }
 
     def _create_multi_config(self):
-        files = []
-        for part in (
+        files = [
+            self._create_temp_file(yaml.safe_dump(part))
+            for part in (
                 self.TEST_KUBE_CONFIG_PART1,
                 self.TEST_KUBE_CONFIG_PART2,
                 self.TEST_KUBE_CONFIG_PART3,
                 self.TEST_KUBE_CONFIG_PART4,
                 self.TEST_KUBE_CONFIG_PART5,
-                self.TEST_KUBE_CONFIG_PART6):
-            files.append(self._create_temp_file(yaml.safe_dump(part)))
+                self.TEST_KUBE_CONFIG_PART6,
+            )
+        ]
         return ENV_KUBECONFIG_PATH_SEPARATOR.join(files)
 
     def test_list_kube_config_contexts(self):

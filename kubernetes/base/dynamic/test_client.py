@@ -88,7 +88,7 @@ class TestDynamicClient(unittest.TestCase):
             api_version='apps.example.com/v1', kind='ClusterChangeMe')
         resp = changeme_api.get()
         self.assertEqual(resp.items, [])
-        changeme_name = 'custom-resource' + short_uuid()
+        changeme_name = f'custom-resource{short_uuid()}'
         changeme_manifest = {
             'apiVersion': 'apps.example.com/v1',
             'kind': 'ClusterChangeMe',
@@ -192,7 +192,7 @@ class TestDynamicClient(unittest.TestCase):
         async_resp = changeme_api.get(async_req=True)
         self.assertEqual(async_resp.items, [])
 
-        changeme_name = 'custom-resource' + short_uuid()
+        changeme_name = f'custom-resource{short_uuid()}'
         changeme_manifest = {
             'apiVersion': 'apps.example.com/v1',
             'kind': 'ChangeMe',
@@ -302,7 +302,7 @@ class TestDynamicClient(unittest.TestCase):
             api_version='apps.example.com/v1', kind='ChangeMe')
         resp = changeme_api.get()
         self.assertEqual(resp.items, [])
-        changeme_name = 'custom-resource' + short_uuid()
+        changeme_name = f'custom-resource{short_uuid()}'
         changeme_manifest = {
             'apiVersion': 'apps.example.com/v1',
             'kind': 'ChangeMe',
@@ -360,7 +360,7 @@ class TestDynamicClient(unittest.TestCase):
         client = DynamicClient(api_client.ApiClient(configuration=self.config))
         api = client.resources.get(api_version='v1', kind='Service')
 
-        name = 'frontend-' + short_uuid()
+        name = f'frontend-{short_uuid()}'
         service_manifest = {'apiVersion': 'v1',
                             'kind': 'Service',
                             'metadata': {'labels': {'name': name},
@@ -408,7 +408,7 @@ class TestDynamicClient(unittest.TestCase):
         api = client.resources.get(
             api_version='v1', kind='ReplicationController')
 
-        name = 'frontend-' + short_uuid()
+        name = f'frontend-{short_uuid()}'
         rc_manifest = {
             'apiVersion': 'v1',
             'kind': 'ReplicationController',
@@ -443,7 +443,7 @@ class TestDynamicClient(unittest.TestCase):
         client = DynamicClient(api_client.ApiClient(configuration=self.config))
         api = client.resources.get(api_version='v1', kind='ConfigMap')
 
-        name = 'test-configmap-' + short_uuid()
+        name = f'test-configmap-{short_uuid()}'
         test_configmap = {
             "kind": "ConfigMap",
             "apiVersion": "v1",
@@ -514,7 +514,7 @@ class TestDynamicClient(unittest.TestCase):
         api = client.resources.get(
             api_version='v1', kind='Pod')
 
-        name = 'pod-' + short_uuid()
+        name = f'pod-{short_uuid()}'
         pod_manifest = {
                 'apiVersion': 'v1',
                 'kind': 'Pod',

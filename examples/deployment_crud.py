@@ -52,15 +52,12 @@ def create_deployment_object():
             "matchLabels":
             {"app": "nginx"}})
 
-    # Instantiate the deployment object
-    deployment = client.V1Deployment(
+    return client.V1Deployment(
         api_version="apps/v1",
         kind="Deployment",
         metadata=client.V1ObjectMeta(name=DEPLOYMENT_NAME),
         spec=spec,
     )
-
-    return deployment
 
 
 def create_deployment(api, deployment):

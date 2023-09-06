@@ -96,12 +96,22 @@ class Discoverer(object):
         return self.__version
 
     def default_groups(self, request_resources=False):
-        groups = {}
-        groups['api'] = { '': {
-            'v1': (ResourceGroup( True, resources=self.get_resources_for_api_version('api', '', 'v1', True) )
-                if request_resources else ResourceGroup(True))
-        }}
-
+        groups = {
+            'api': {
+                '': {
+                    'v1': (
+                        ResourceGroup(
+                            True,
+                            resources=self.get_resources_for_api_version(
+                                'api', '', 'v1', True
+                            ),
+                        )
+                        if request_resources
+                        else ResourceGroup(True)
+                    )
+                }
+            }
+        }
         groups[DISCOVERY_PREFIX] = {'': {
             'v1': ResourceGroup(True, resources = {"List": [ResourceList(self.client)]})
         }}
@@ -111,7 +121,7 @@ class Discoverer(object):
         """ Discovers all API groups present in the cluster """
         if not self._cache.get('resources') or update:
             self._cache['resources'] = self._cache.get('resources', {})
-            groups_response = self.client.request('GET', '/{}'.format(DISCOVERY_PREFIX)).groups
+            groups_response = self.client.request('GET', f'/{DISCOVERY_PREFIX}').groups
 
             groups = self.default_groups(request_resources=request_resources)
 
@@ -144,8 +154,9 @@ class Discoverer(object):
                 if isinstance(e, MaxRetryError) and not isinstance(e.reason, ProtocolError):
                     raise
                 if not self.client.configuration.host.startswith("https://"):
-                    raise ValueError("Host value %s should start with https:// when talking to HTTPS endpoint" %
-                                     self.client.configuration.host)
+                    raise ValueError(
+                        f"Host value {self.client.configuration.host} should start with https:// when talking to HTTPS endpoint"
+                    )
                 else:
                     raise
 
@@ -203,14 +214,16 @@ class Discoverer(object):
                 result for result in results if result.group_version == kwargs['api_version']
             ]
         # If there are multiple matches, prefer non-List kinds
-        if len(results) > 1 and not all([isinstance(x, ResourceList) for x in results]):
+        if len(results) > 1 and not all(
+            isinstance(x, ResourceList) for x in results
+        ):
             results = [result for result in results if not isinstance(result, ResourceList)]
         if len(results) == 1:
             return results[0]
         elif not results:
-            raise ResourceNotFoundError('No matches found for {}'.format(kwargs))
+            raise ResourceNotFoundError(f'No matches found for {kwargs}')
         else:
-            raise ResourceNotUniqueError('Multiple matches found for {}: {}'.format(kwargs, results))
+            raise ResourceNotUniqueError(f'Multiple matches found for {kwargs}: {results}')
 
 
 class LazyDiscoverer(Discoverer):
@@ -257,7 +270,9 @@ class LazyDiscoverer(Discoverer):
                 return []
             elif isinstance(resourcePart, ResourceGroup):
                 if len(reqParams) != 2:
-                    raise ValueError("prefix and group params should be present, have %s" % reqParams)
+                    raise ValueError(
+                        f"prefix and group params should be present, have {reqParams}"
+                    )
                 # Check if we've requested resources for this group
                 if not resourcePart.resources:
                     prefix, group, version = reqParams[0], reqParams[1], part
@@ -275,15 +290,14 @@ class LazyDiscoverer(Discoverer):
                 # as we recurse
                 return self.__search(parts[1:], resourcePart, reqParams + [part] )
             else:
-                if parts[1] != '*' and isinstance(parts[1], dict):
-                    for _resource in resourcePart:
-                        for term, value in parts[1].items():
-                            if getattr(_resource, term) == value:
-                                return [_resource]
-
-                    return []
-                else:
+                if parts[1] == '*' or not isinstance(parts[1], dict):
                     return resourcePart
+                for _resource in resourcePart:
+                    for term, value in parts[1].items():
+                        if getattr(_resource, term) == value:
+                            return [_resource]
+
+                return []
         else:
             matches = []
             for key in resources.keys():
@@ -368,14 +382,13 @@ class EagerDiscoverer(Discoverer):
             elif isinstance(resourcePart, dict):
                 return self.__search(parts[1:], resourcePart)
             else:
-                if parts[1] != '*' and isinstance(parts[1], dict):
-                    for _resource in resourcePart:
-                        for term, value in parts[1].items():
-                            if getattr(_resource, term) == value:
-                                return [_resource]
-                    return []
-                else:
+                if parts[1] == '*' or not isinstance(parts[1], dict):
                     return resourcePart
+                for _resource in resourcePart:
+                    for term, value in parts[1].items():
+                        if getattr(_resource, term) == value:
+                            return [_resource]
+                return []
         elif part == '*':
             matches = []
             for key in resources.keys():

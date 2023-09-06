@@ -63,27 +63,29 @@ class Resource(object):
             'categories': self.categories,
             'subresources': {k: sr.to_dict() for k, sr in self.subresources.items()},
         }
-        d.update(self.extra_args)
+        d |= self.extra_args
         return d
 
     @property
     def group_version(self):
-        if self.group:
-            return '{}/{}'.format(self.group, self.api_version)
-        return self.api_version
+        return f'{self.group}/{self.api_version}' if self.group else self.api_version
 
     def __repr__(self):
-        return '<{}({}/{})>'.format(self.__class__.__name__, self.group_version, self.name)
+        return f'<{self.__class__.__name__}({self.group_version}/{self.name})>'
 
     @property
     def urls(self):
-        full_prefix = '{}/{}'.format(self.prefix, self.group_version)
+        full_prefix = f'{self.prefix}/{self.group_version}'
         resource_name = self.name.lower()
         return {
-            'base': '/{}/{}'.format(full_prefix, resource_name),
-            'namespaced_base': '/{}/namespaces/{{namespace}}/{}'.format(full_prefix, resource_name),
+            'base': f'/{full_prefix}/{resource_name}',
+            'namespaced_base': '/{}/namespaces/{{namespace}}/{}'.format(
+                full_prefix, resource_name
+            ),
             'full': '/{}/{}/{{name}}'.format(full_prefix, resource_name),
-            'namespaced_full': '/{}/namespaces/{{namespace}}/{}/{{name}}'.format(full_prefix, resource_name)
+            'namespaced_full': '/{}/namespaces/{{namespace}}/{}/{{name}}'.format(
+                full_prefix, resource_name
+            ),
         }
 
     def path(self, name=None, namespace=None):
@@ -112,7 +114,7 @@ class ResourceList(Resource):
         self.client = client
         self.group = group
         self.api_version = api_version
-        self.kind = kind or '{}List'.format(base_kind)
+        self.kind = kind or f'{base_kind}List'
         self.base_kind = base_kind
         self.base_resource_lookup = base_resource_lookup
         self.__base_resource = None
@@ -150,7 +152,9 @@ class ResourceList(Resource):
             raise ValueError('The `items` field in the body must be populated when calling methods on a ResourceList')
 
         if self.kind != kind:
-            raise ValueError('Methods on a {} must be called with a body containing the same kind. Receieved {} instead'.format(self.kind, kind))
+            raise ValueError(
+                f'Methods on a {self.kind} must be called with a body containing the same kind. Receieved {kind} instead'
+            )
 
         return {
             'api_version': api_version,
@@ -224,9 +228,7 @@ class ResourceList(Resource):
         }
 
     def __getattr__(self, name):
-        if self.base_resource():
-            return getattr(self.base_resource(), name)
-        return None
+        return getattr(self.base_resource(), name) if self.base_resource() else None
 
 
 class Subresource(Resource):
@@ -257,7 +259,7 @@ class Subresource(Resource):
 
     @property
     def urls(self):
-        full_prefix = '{}/{}'.format(self.prefix, self.group_version)
+        full_prefix = f'{self.prefix}/{self.group_version}'
         return {
             'full': '/{}/{}/{{name}}/{}'.format(full_prefix, self.parent.name, self.subresource),
             'namespaced_full': '/{}/namespaces/{{namespace}}/{}/{{name}}/{}'.format(full_prefix, self.parent.name, self.subresource)
@@ -274,7 +276,7 @@ class Subresource(Resource):
             'namespaced': self.namespaced,
             'verbs': self.verbs
         }
-        d.update(self.extra_args)
+        d |= self.extra_args
         return d
 
 
@@ -329,20 +331,18 @@ class ResourceInstance(object):
         return repr(self)
 
     def __repr__(self):
-        return "ResourceInstance[{}]:\n  {}".format(
-            self.attributes.kind,
-            '  '.join(yaml.safe_dump(self.to_dict()).splitlines(True))
-        )
+        return f"ResourceInstance[{self.attributes.kind}]:\n  {'  '.join(yaml.safe_dump(self.to_dict()).splitlines(True))}"
 
     def __getattr__(self, name):
-        if not '_ResourceInstance__initialised' in self.__dict__:
+        if '_ResourceInstance__initialised' not in self.__dict__:
             return super(ResourceInstance, self).__getattr__(name)
         return getattr(self.attributes, name)
 
     def __setattr__(self, name, value):
-        if not '_ResourceInstance__initialised' in self.__dict__:
-            return super(ResourceInstance, self).__setattr__(name, value)
-        elif name in self.__dict__:
+        if (
+            '_ResourceInstance__initialised' not in self.__dict__
+            or name in self.__dict__
+        ):
             return super(ResourceInstance, self).__setattr__(name, value)
         else:
             self.attributes[name] = value
@@ -387,5 +387,4 @@ class ResourceField(object):
         return dir(type(self)) + list(self.__dict__.keys())
 
     def __iter__(self):
-        for k, v in self.__dict__.items():
-            yield (k, v)
+        yield from self.__dict__.items()

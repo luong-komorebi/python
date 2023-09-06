@@ -66,11 +66,11 @@ def portforward_commands(api_instance):
                                                 namespace='default')
     except ApiException as e:
         if e.status != 404:
-            print("Unknown error: %s" % e)
+            print(f"Unknown error: {e}")
             exit(1)
 
     if not resp:
-        print("Pod %s does not exist. Creating it..." % name)
+        print(f"Pod {name} does not exist. Creating it...")
         pod_manifest = {
             'apiVersion': 'v1',
             'kind': 'Pod',
@@ -119,7 +119,7 @@ def portforward_commands(api_instance):
     if error is None:
         print("No port forward errors on port 80.")
     else:
-        print("Port 80 has the following error: %s" % error)
+        print(f"Port 80 has the following error: {error}")
 
     # Monkey patch socket.create_connection which is used by http.client and
     # urllib.request. The same can be done with urllib3.util.connection.create_connection
@@ -146,11 +146,10 @@ def portforward_commands(api_instance):
                         port = service_port.target_port
                         break
                 else:
-                    raise RuntimeError(
-                        "Unable to find service port: %s" % port)
+                    raise RuntimeError(f"Unable to find service port: {port}")
                 label_selector = []
                 for key, value in service.spec.selector.items():
-                    label_selector.append("%s=%s" % (key, value))
+                    label_selector.append(f"{key}={value}")
                 pods = api_instance.list_namespaced_pod(
                     namespace, label_selector=",".join(label_selector)
                 )
@@ -167,24 +166,21 @@ def portforward_commands(api_instance):
                             continue
                         break
                     else:
-                        raise RuntimeError(
-                            "Unable to find service port name: %s" % port)
+                        raise RuntimeError(f"Unable to find service port name: {port}")
             elif dns_name[1] != 'pod':
-                raise RuntimeError(
-                    "Unsupported resource type: %s" %
-                    dns_name[1])
+                raise RuntimeError(f"Unsupported resource type: {dns_name[1]}")
         pf = portforward(api_instance.connect_get_namespaced_pod_portforward,
                          name, namespace, ports=str(port))
         return pf.socket(port)
+
     socket.create_connection = kubernetes_create_connection
 
     # Access the nginx http server using the
     # "<pod-name>.pod.<namespace>.kubernetes" dns name.
-    response = urllib_request.urlopen(
-        'http://%s.pod.default.kubernetes' % name)
+    response = urllib_request.urlopen(f'http://{name}.pod.default.kubernetes')
     html = response.read().decode('utf-8')
     response.close()
-    print('Status Code: %s' % response.code)
+    print(f'Status Code: {response.code}')
     print(html)
 
 

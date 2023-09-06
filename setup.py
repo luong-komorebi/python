@@ -37,7 +37,7 @@ with open('requirements.txt') as f:
         line = line.strip()
         if ';' in line:
             requirement, _, specifier = line.partition(';')
-            for_specifier = EXTRAS.setdefault(':{}'.format(specifier), [])
+            for_specifier = EXTRAS.setdefault(f':{specifier}', [])
             for_specifier.append(requirement)
         else:
             REQUIRES.append(line)
@@ -57,17 +57,25 @@ setup(
     install_requires=REQUIRES,
     tests_require=TESTS_REQUIRES,
     extras_require=EXTRAS,
-    packages=['kubernetes', 'kubernetes.client', 'kubernetes.config',
-              'kubernetes.watch', 'kubernetes.client.api',
-              'kubernetes.stream', 'kubernetes.client.models',
-              'kubernetes.utils', 'kubernetes.client.apis',
-              'kubernetes.dynamic', 'kubernetes.leaderelection',
-              'kubernetes.leaderelection.resourcelock'],
+    packages=[
+        'kubernetes',
+        'kubernetes.client',
+        'kubernetes.config',
+        'kubernetes.watch',
+        'kubernetes.client.api',
+        'kubernetes.stream',
+        'kubernetes.client.models',
+        'kubernetes.utils',
+        'kubernetes.client.apis',
+        'kubernetes.dynamic',
+        'kubernetes.leaderelection',
+        'kubernetes.leaderelection.resourcelock',
+    ],
     include_package_data=True,
     long_description="Python client for kubernetes http://kubernetes.io/",
     python_requires='>=3.6',
     classifiers=[
-        "Development Status :: %s" % DEVELOPMENT_STATUS,
+        f"Development Status :: {DEVELOPMENT_STATUS}",
         "Topic :: Utilities",
         "Intended Audience :: Developers",
         "Intended Audience :: Information Technology",

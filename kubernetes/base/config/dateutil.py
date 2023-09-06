@@ -50,9 +50,7 @@ MICROSEC_PER_SEC = 1000000
 def parse_rfc3339(s):
     if isinstance(s, datetime.datetime):
         # no need to parse it, just make sure it has a timezone.
-        if not s.tzinfo:
-            return s.replace(tzinfo=UTC)
-        return s
+        return s.replace(tzinfo=UTC) if not s.tzinfo else s
     groups = _re_rfc3339.search(s).groups()
     dt = [0] * 7
     for x in range(6):
@@ -65,11 +63,9 @@ def parse_rfc3339(s):
     if groups[7] is not None and groups[7] != 'Z' and groups[7] != 'z':
         tz_groups = _re_timezone.search(groups[7]).groups()
         hour = int(tz_groups[1])
-        minute = 0
         if tz_groups[0] == "-":
             hour *= -1
-        if tz_groups[2]:
-            minute = int(tz_groups[2])
+        minute = int(tz_groups[2]) if tz_groups[2] else 0
         tz = TimezoneInfo(hour, minute)
     return datetime.datetime(
         year=dt[0], month=dt[1], day=dt[2],

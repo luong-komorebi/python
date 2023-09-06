@@ -60,7 +60,7 @@ class AdmissionregistrationApi(object):
         kwargs['_return_http_data_only'] = True
         return self.get_api_group_with_http_info(**kwargs)  # noqa: E501
 
-    def get_api_group_with_http_info(self, **kwargs):  # noqa: E501
+    def get_api_group_with_http_info(self, **kwargs):    # noqa: E501
         """get_api_group  # noqa: E501
 
         get information of a group  # noqa: E501
@@ -87,44 +87,40 @@ class AdmissionregistrationApi(object):
         local_var_params = locals()
 
         all_params = [
+            'async_req',
+            '_return_http_data_only',
+            '_preload_content',
+            '_request_timeout',
         ]
-        all_params.extend(
-            [
-                'async_req',
-                '_return_http_data_only',
-                '_preload_content',
-                '_request_timeout'
-            ]
-        )
-
         for key, val in six.iteritems(local_var_params['kwargs']):
             if key not in all_params:
                 raise ApiTypeError(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method get_api_group" % key
+                    f"Got an unexpected keyword argument '{key}' to method get_api_group"
                 )
             local_var_params[key] = val
         del local_var_params['kwargs']
-
-        collection_formats = {}
 
         path_params = {}
 
         query_params = []
 
-        header_params = {}
-
         form_params = []
         local_var_files = {}
 
         body_params = None
-        # HTTP header `Accept`
-        header_params['Accept'] = self.api_client.select_header_accept(
-            ['application/json', 'application/yaml', 'application/vnd.kubernetes.protobuf'])  # noqa: E501
-
+        header_params = {
+            'Accept': self.api_client.select_header_accept(
+                [
+                    'application/json',
+                    'application/yaml',
+                    'application/vnd.kubernetes.protobuf',
+                ]
+            )
+        }
         # Authentication setting
         auth_settings = ['BearerToken']  # noqa: E501
 
+        collection_formats = {}
         return self.api_client.call_api(
             '/apis/admissionregistration.k8s.io/', 'GET',
             path_params,

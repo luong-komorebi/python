@@ -27,14 +27,12 @@ def create_daemon_set_object():
             match_labels={"app": "redis"}
         ),
         template=template)
-    # DaemonSet
-    daemonset = client.V1DaemonSet(
+    return client.V1DaemonSet(
         api_version="apps/v1",
         kind="DaemonSet",
         metadata=client.V1ObjectMeta(name="daemonset-redis"),
-        spec=spec)
-
-    return daemonset
+        spec=spec,
+    )
 
 
 def create_daemon_set(apps_v1_api, daemon_set_object):

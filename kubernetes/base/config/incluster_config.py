@@ -27,10 +27,8 @@ SERVICE_CERT_FILENAME = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 
 def _join_host_port(host, port):
     """Adapted golang's net.JoinHostPort"""
-    template = "%s:%s"
     host_requires_bracketing = ':' in host or '%' in host
-    if host_requires_bracketing:
-        template = "[%s]:%s"
+    template = "[%s]:%s" if host_requires_bracketing else "%s:%s"
     return template % (host, port)
 
 
@@ -104,7 +102,7 @@ class InClusterConfigLoader(object):
             content = f.read()
             if not content:
                 raise ConfigException("Token file exists but empty.")
-            self.token = "bearer " + content
+            self.token = f"bearer {content}"
             self.token_expires_at = datetime.datetime.now(
             ) + self._token_refresh_period
 

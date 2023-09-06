@@ -58,10 +58,7 @@ class WSClient:
         """
         self._connected = False
         self._channels = {}
-        if capture_all:
-            self._all = StringIO()
-        else:
-            self._all = _IgnoredIO()
+        self._all = StringIO() if capture_all else _IgnoredIO()
         self.sock = create_websocket(configuration, url, headers)
         self._connected = True
         self._returncode = None
@@ -70,9 +67,7 @@ class WSClient:
         """Peek a channel and return part of the input,
         empty string otherwise."""
         self.update(timeout=timeout)
-        if channel in self._channels:
-            return self._channels[channel]
-        return ""
+        return self._channels[channel] if channel in self._channels else ""
 
     def read_channel(self, channel, timeout=0):
         """Read data from a channel."""
@@ -95,8 +90,7 @@ class WSClient:
                 if "\n" in data:
                     index = data.find("\n")
                     ret = data[:index]
-                    data = data[index+1:]
-                    if data:
+                    if data := data[index + 1 :]:
                         self._channels[channel] = data
                     else:
                         del self._channels[channel]
@@ -193,14 +187,13 @@ class WSClient:
             if op_code == ABNF.OPCODE_CLOSE:
                 self._connected = False
                 return
-            elif op_code == ABNF.OPCODE_BINARY or op_code == ABNF.OPCODE_TEXT:
+            elif op_code in [ABNF.OPCODE_BINARY, ABNF.OPCODE_TEXT]:
                 data = frame.data
                 if six.PY3:
                     data = data.decode("utf-8", "replace")
                 if len(data) > 1:
                     channel = ord(data[0])
-                    data = data[1:]
-                    if data:
+                    if data := data[1:]:
                         if channel in [STDOUT_CHANNEL, STDERR_CHANNEL]:
                             # keeping all messages in the order they received
                             # for non-blocking call.
@@ -228,15 +221,15 @@ class WSClient:
         """
         if self.is_open():
             return None
-        else:
-            if self._returncode is None:
-                err = self.read_channel(ERROR_CHANNEL)
-                err = yaml.safe_load(err)
-                if err['status'] == "Success":
-                    self._returncode = 0
-                else:
-                    self._returncode = int(err['details']['causes'][0]['message'])
-            return self._returncode
+        if self._returncode is None:
+            err = self.read_channel(ERROR_CHANNEL)
+            err = yaml.safe_load(err)
+            self._returncode = (
+                0
+                if err['status'] == "Success"
+                else int(err['details']['causes'][0]['message'])
+            )
+        return self._returncode
 
     def close(self, **kwargs):
         """
@@ -267,8 +260,8 @@ class PortForward:
         # raw socket data sent by the python application and the websocket protocol. This thread
         # terminates after either side has closed all ports, and after flushing all pending data.
         proxy = threading.Thread(
-            name="Kubernetes port forward proxy: %s" % ', '.join([str(port) for port in ports]),
-            target=self._proxy
+            name=f"Kubernetes port forward proxy: {', '.join([str(port) for port in ports])}",
+            target=self._proxy,
         )
         proxy.daemon = True
         proxy.start()
@@ -358,13 +351,14 @@ class PortForward:
                         if port.data:
                             wlist.append(port.python)
                         local_all_closed = False
+                    elif port.data:
+                        wlist.append(port.python)
+                        local_all_closed = False
                     else:
-                        if port.data:
-                            wlist.append(port.python)
-                            local_all_closed = False
-                        else:
-                            port.python.close()
-            if local_all_closed and not (self.websocket.connected and kubernetes_data):
+                        port.python.close()
+            if local_all_closed and (
+                not self.websocket.connected or not kubernetes_data
+            ):
                 self.websocket.close()
                 return
             r, w, _ = select.select(rlist, wlist, [])
@@ -378,7 +372,7 @@ class PortForward:
                                 raise RuntimeError("Unexpected frame data size")
                             channel = six.byte2int(frame.data)
                             if channel >= len(channel_ports):
-                                raise RuntimeError("Unexpected channel number: %s" % channel)
+                                raise RuntimeError(f"Unexpected channel number: {channel}")
                             port = channel_ports[channel]
                             if channel_initialized[channel]:
                                 if channel % 2:
@@ -396,18 +390,20 @@ class PortForward:
                                 port_number = six.byte2int(frame.data[1:2]) + (six.byte2int(frame.data[2:3]) * 256)
                                 if port_number != port.port_number:
                                     raise RuntimeError(
-                                        "Unexpected port number in initial channel frame: %s" % port_number
+                                        f"Unexpected port number in initial channel frame: {port_number}"
                                     )
                                 channel_initialized[channel] = True
                         elif opcode not in (ABNF.OPCODE_PING, ABNF.OPCODE_PONG, ABNF.OPCODE_CLOSE):
-                            raise RuntimeError("Unexpected websocket opcode: %s" % opcode)
-                        if not (isinstance(self.websocket.sock, ssl.SSLSocket) and self.websocket.sock.pending()):
+                            raise RuntimeError(f"Unexpected websocket opcode: {opcode}")
+                        if (
+                            not isinstance(self.websocket.sock, ssl.SSLSocket)
+                            or not self.websocket.sock.pending()
+                        ):
                             pending = False
                 else:
                     port = local_ports[sock]
                     if port.python.fileno() != -1:
-                        data = port.python.recv(1024 * 1024)
-                        if data:
+                        if data := port.python.recv(1024 * 1024):
                             kubernetes_data += ABNF.create_frame(
                                 port.channel + data,
                                 ABNF.OPCODE_BINARY,
@@ -436,8 +432,7 @@ def get_websocket_url(url, query_params=None):
         query = []
         for key, value in query_params:
             if key == 'command' and isinstance(value, list):
-                for command in value:
-                    query.append((key, command))
+                query.extend((key, command) for command in value)
             else:
                 query.append((key, value))
         if query:
@@ -452,10 +447,9 @@ def create_websocket(configuration, url, headers=None):
     # http headers we get from the generated code
     header = []
     if headers and 'authorization' in headers:
-            header.append("authorization: %s" % headers['authorization'])
+        header.append(f"authorization: {headers['authorization']}")
     if headers and 'sec-websocket-protocol' in headers:
-        header.append("sec-websocket-protocol: %s" %
-                      headers['sec-websocket-protocol'])
+        header.append(f"sec-websocket-protocol: {headers['sec-websocket-protocol']}")
     else:
         header.append("sec-websocket-protocol: v4.channel.k8s.io")
 
@@ -520,7 +514,7 @@ def websocket_call(configuration, _method, url, **kwargs):
         if not _preload_content:
             return client
         client.run_forever(timeout=_request_timeout)
-        return WSResponse('%s' % ''.join(client.read_all()))
+        return WSResponse(f"{''.join(client.read_all())}")
     except (Exception, KeyboardInterrupt, SystemExit) as e:
         raise ApiException(status=0, reason=str(e))
 
@@ -539,11 +533,11 @@ def portforward_call(configuration, _method, url, **kwargs):
                 try:
                     port_number = int(port)
                 except ValueError:
-                    raise ApiValueError("Invalid port number: %s" % port)
+                    raise ApiValueError(f"Invalid port number: {port}")
                 if not (0 < port_number < 65536):
-                    raise ApiValueError("Port number must be between 0 and 65536: %s" % port)
+                    raise ApiValueError(f"Port number must be between 0 and 65536: {port}")
                 if port_number in ports:
-                    raise ApiValueError("Duplicate port numbers: %s" % port)
+                    raise ApiValueError(f"Duplicate port numbers: {port}")
                 ports.append(port_number)
     if not ports:
         raise ApiValueError("Missing required parameter `ports`")

@@ -55,14 +55,12 @@ def create_stateful_set_object():
             match_labels={"app": "redis"}
         ),
         template=template)
-    # StatefulSet
-    statefulset = client.V1StatefulSet(
+    return client.V1StatefulSet(
         api_version="apps/v1",
         kind="StatefulSet",
         metadata=client.V1ObjectMeta(name="statefulset-redis"),
-        spec=spec)
-
-    return statefulset
+        spec=spec,
+    )
 
 
 def create_stateful_set(apps_v1_api, stateful_set_object):

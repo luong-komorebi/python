@@ -82,10 +82,8 @@ class WatchTests(unittest.TestCase):
         fake_api.read_namespaced_pod_log.__doc__ = ':param bool follow:\n:return: str'
 
         w = Watch()
-        count = 1
-        for e in w.stream(fake_api.read_namespaced_pod_log):
+        for count, e in enumerate(w.stream(fake_api.read_namespaced_pod_log), start=2):
             self.assertEqual("log_line_1", e)
-            count += 1
             # make sure we can stop the watch and the last event with won't be
             # returned
             if count == 2:
@@ -121,10 +119,7 @@ class WatchTests(unittest.TestCase):
 
         def get_values(*args, **kwargs):
             self.callcount += 1
-            if self.callcount == 1:
-                return []
-            else:
-                return values
+            return [] if self.callcount == 1 else values
 
         fake_resp.stream = Mock(
             side_effect=get_values)
@@ -169,7 +164,7 @@ class WatchTests(unittest.TestCase):
 
     def test_watch_stream_twice(self):
         w = Watch(float)
-        for step in ['first', 'second']:
+        for _ in ['first', 'second']:
             fake_resp = Mock()
             fake_resp.close = Mock()
             fake_resp.release_conn = Mock()
@@ -181,7 +176,7 @@ class WatchTests(unittest.TestCase):
             fake_api.get_namespaces.__doc__ = ':return: V1NamespaceList'
 
             count = 1
-            for e in w.stream(fake_api.get_namespaces):
+            for _ in w.stream(fake_api.get_namespaces):
                 count += 1
                 if count == 3:
                     w.stop()
@@ -210,12 +205,12 @@ class WatchTests(unittest.TestCase):
         count = 0
 
         # when timeout_seconds is set, auto-exist when timeout reaches
-        for e in w.stream(fake_api.get_namespaces, timeout_seconds=1):
+        for _ in w.stream(fake_api.get_namespaces, timeout_seconds=1):
             count = count + 1
         self.assertEqual(count, 1)
 
         # when no timeout_seconds, only exist when w.stop() is called
-        for e in w.stream(fake_api.get_namespaces):
+        for _ in w.stream(fake_api.get_namespaces):
             count = count + 1
             if count == 2:
                 w.stop()
